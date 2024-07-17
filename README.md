@@ -1,27 +1,143 @@
-# NgOnChangesArray
+ngOnChanges will work if @Input is used in the same component where OnChanges is implements in the component
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 17.3.8.
 
-## Development server
+app.component.ts
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+export class AppComponent {
+  parentItems =[
+    {
+      name: 'Bini',
+      age:20
+    },
+    {
+      name:'Babu',
+      age: 30
+    }
+  ];
+  pushArray(){
+    this.parentItems.push({
+      name:'Anna',
+      age:24
+    })
+  }
+}
 
-## Code scaffolding
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
 
-## Build
+App.component.html
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+<app-child [items]="parentItems"></app-child>
+<button (click)="pushArray()">Push Array</button>
 
-## Running unit tests
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+child.component.ts
 
-## Running end-to-end tests
+export class ChildComponent implements OnChanges{
+@Input() items : any[] =[];
 
-Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+ngOnChanges(changes: SimpleChanges): void {
+console.log("Changes", changes);
+}
+}
 
-## Further help
+child.component.html
 
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+
+<div *ngFor="let item of items">
+    <p>{{item.name}} - {{item.age}}</p>
+</div>
+
+
+Pushing the array ( i.e in app.component.ts pushArray() function triggered when pushArray button is clicked) will push the array value with {name:'Anna', age:24} with the following function
+
+ pushArray(){
+    this.parentItems.push({
+      name:'Anna',
+      age:24
+    })
+  }
+
+
+Hence output will be as follows
+
+Bini - 20
+
+Babu - 30
+
+Anna - 24
+
+
+But the console in ngOnChanges in child.component.ts (shown below) will not console in the console window because new reference to the array is not done in pushArray() in app.component.ts . 
+
+ngOnChanges(changes: SimpleChanges): void {
+console.log("Changes", changes);
+}
+
+
+So, replace the pushArray() in app.component.ts with the following. The below code will create a  new refence to the array parentItems and pass to items in child.component.ts through @Input
+
+
+pushArray(){
+    this.parentItems = [...this.parentItems, {
+      name:'Anna',
+      age:24
+    }
+    ]}
+
+
+Hence, in console window console will be
+
+
+
+Changes 
+{items: SimpleChange}
+items
+: 
+SimpleChange
+currentValue
+: 
+Array(3)
+0
+: 
+{name: 'Bini', age: 20}
+1
+: 
+{name: 'Babu', age: 30}
+2
+: 
+{name: 'Anna', age: 24}
+length
+: 
+3
+[[Prototype]]
+: 
+Array(0)
+firstChange
+: 
+false
+previousValue
+: 
+Array(2)
+0
+: 
+{name: 'Bini', age: 20}
+1
+: 
+{name: 'Babu', age: 30}
+length
+: 
+2
+
+
+
+
+Another way to create a new reference on pushArray in app.component.ts, depicted below
+
+
+pushArray(){
+       this.parentItems.push({   //Another way to get new refernce hence ngOnChanges will not trigger
+     name:'Anna',
+     age: 24
+    })
+     this.parentItems = [...this.parentItems];
+  }
